@@ -18,6 +18,7 @@ $^\star$: Equal Contribution, $^\dagger$: Corresponding Author <br>
 [![arXiv](https://img.shields.io/badge/arXiv-2408.10906-blue?logo=arxiv&color=%23B31B1B)](https://arxiv.org/abs/2408.10906)
 [![ShapeSplat Project Page](https://img.shields.io/badge/ShapeSplat-Project%20Page-red?logo=globe)](https://unique1i.github.io/ShapeSplat/)
 [![ShapeSplat Dataset Release](https://img.shields.io/badge/ShapeSplat-Dataset%20Release-blue?logo=globe)](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1)
+[![ModelNetSplats Dataset Release](https://img.shields.io/badge/ModelNetSplats-Dataset%20Release-blue?logo=globe)](https://huggingface.co/datasets/ShapeSplats/ModelNet_Splats)
 
 
 ## News
@@ -100,7 +101,114 @@ sh_base[:, 2, 0] = gs_vertex['f_dc_2'].astype(np.float32)
 sh_base = sh_base.reshape(-1, 3)
 ```
 
+
 ## Installation
+
+We use **Conda** for environment setup with the following key configurations:  **Python Version**: 3.9  **PyTorch Version**: 1.12  **CUDA Version**: 11.3  
+
+You are encouraged to explore more advanced versions of PyTorch if needed. For detailed setup instructions, refer to the `.install.sh` script provided.
+
+We use conda for the environment setup, python 3.9 and torch 1.12 abd cuda 11.3 is used, you can explore more advanced torch version. You can follow the .install.sh for environment setup
+
+```bash
+# git the repo
+git clone https://github.com/qimaqi/ShapeSplat-Gaussian_MAE.git
+cd ShapeSplat-Gaussian_MAE
+
+# create conda env
+conda create -n gaussian_mae python=3.9 -y 
+conda activate gaussian_mae
+
+# install torch, you can install more updated version
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
+
+# install dependency, if you use more updated torch, maybe need to modify requirements.txt
+pip install -r requirements.txt
+
+```
+
+## DATASET Preparation
+
+Please refer to the instructions in the `DATA.md` file for detailed guidance on data preparation. The instructions cover:  
+- Preparing the pretraining dataset.  
+- Setting up finetuning datasets for classification and segmentation tasks.  
+- Update the data config and some environement parameters
+
+
+## Pretrain
+
+In this section, we outline the steps for pretraining the Gaussian-MAE model. For each setup, we use a config file located in the ShapeSplat-Gaussian_MAE/cfgs/pretrain/ directory.
+
+Below are some important parameters you can modify to create new experiment setups:
+
+- **`dataset.{split}.others.norm_attribute`** 
+
+This parameter connects with Section 4.2 of the paper, which discusses the attribute used for normalization.
+
+- **`model.norm_attribute`** 
+Specifies how many splats are considered in each group to map to one token.
+
+- **`model.group_size`** 
+Specifies the number of gaussians considered for one group/token.
+  
+- **`model.num_group`** 
+Specifies the number of groups/tokens.
+
+- **`model.attribute`** 
+The embedding feature discussed in Section 4.1 of the paper.
+
+- **`model.group_attribute`** 
+The grouping feature discussed in Section 4.1 of the paper.
+
+- **`npoints`** 
+The number of points after sampling from the input Gaussians is ablated in Table E.1 in the supplementary material. Note that you need to modify th `group_size` and `num_group` accordingly.
+
+- **`soft_knn`** 
+To enable the ***Splat pooling layer*** discussed in Section 4.3 of the paper, in the experiments you should set group_attribute = ['xyz'] when enabling the soft KNN.
+
+
+In following example we show the example code to pretrain with E(All), G(xyz) define in `pretrain_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/pretrain`. The main body of the code is shown below. To define the experiment configuration, use the `--config` flag and set the experiment name in `--exp_name`accordingly. If the job is stopped and needs to be resumed, use the `--resume` flag.
+ 
+
+
+```bash
+python main.py \
+    --config cfgs/pretrain/pretrain_enc_full_group_xyz_1k.yaml \
+    --exp_name gaussian_mae_enc_full_group_xyz_1k \
+    --num_workers=8 \
+    # --resume 
+
+
+```
+
+
+## ModelNet Finetune
+After pretraining, you can parse the checkpoints path in `cls10_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/finetune`
+
+```bash
+PRETRAIN_CKPT=<The pretrain checkpoint above>
+
+# check if PRETRAIN_CKPT exists
+if [ ! -f "$PRETRAIN_CKPT" ]; then
+    echo "$PRETRAIN_CKPT does not exist."
+    exit 1
+fi
+
+
+python main.py \
+    --config cfgs/fintune/finetune_modelnet10_enc_full_group_xyz_1k.yaml \
+    --finetune_model \
+    --exp_name modelnet10_cls_enc_full_group_xyz_1k \
+    --seed 0 \
+    --ckpts ${PRETRAIN_CKPT}
+
+```
+
+Similar to pretrain, you have to define one config for each experiments. Notice that the finetune config need to be align with the pretrain config parameters.
+
+
+
+
 
 
 

@@ -1,0 +1,6 @@
+NAME: ModelNetGaussian
+DATA_PATH: /ShapeSplat-Gaussian_MAE/datasets/modelnet_split
+GS_PATH: /ShapeSplat-Gaussian_MAE/gs_data/modelsplat
+N_POINTS: 8192
+NUM_CATEGORY: 40
+ATTRIBUTE: ['xyz','opacity','scale','rotation','sh']

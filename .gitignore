@@ -99,3 +99,7 @@ blender_install
 render
 
 
+experiments/
+sh_jobs/pretrain/joblogs/
+segmentation_gs/log/
+segmentation_gs/sh_jobs/joblogs/
