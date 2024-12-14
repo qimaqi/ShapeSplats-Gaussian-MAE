@@ -207,8 +207,35 @@ python main.py \
 Similar to pretrain, you have to define one config for each experiments. Notice that the finetune config need to be align with the pretrain config parameters.
 
 
+## ShapeSplat-Part Segmentation finetune
+For ShapeSplat segmentation, we utilize the Gaussian splats generated for ShapeNet Part. Since ShapeNet Part is a subset of ShapeNet Core, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
+
+For simplicity, we follow the approach used in PointMAE and create a separate folder for part segmentation fine-tuning. Please refer to [segmentation_gs](./segmentation_gs/) for detailed usage instructions.
 
 
+## Results:
+<!-- For pretrain the results can be found in the [./experiments/<exp-config>/](./experiments/) folder by default. You can find **<exp_name>** and **TFBoard** folders under this folder. The pretrain loss is logged in the tensorboard and you can use wandb by parsing --use_wandb arguments. The reconstructed gaussian of last epoch is stored in folder save_ply, you can visualize through standard gaussian visualzier tool like [Interactiver Viewer](https://github.com/graphdeco-inria/gaussian-splatting?tab=readme-ov-file#interactive-viewers) or [online viewer](https://playcanvas.com/supersplat/editor/).
+
+For modelsplats finetune experiments similarilly you can find the finetune results under [./experiments/<exp-config>/](./experiments/). We log the value acc in .log file where it show as best ckpt.
+
+
+
+# Experiment Results
+
+## Pretraining Results -->
+
+By default, the results of pretraining are stored in the [./experiments/exp-config/](./experiments/) folder. Within this folder, you will find the **<exp_name>** and **TFBoard** subdirectories.
+
+- **TensorBoard Logging**: Pretraining loss is logged in TensorBoard.
+- **Using Weights & Biases**: To log metrics via Weights & Biases, pass the `--use_wandb` argument during training.
+- **Gaussian Reconstruction**: The reconstructed Gaussians from the last epoch are saved in the `save_ply` folder. These can be visualized using standard Gaussian visualization tools like the [Interactive Viewer](https://github.com/graphdeco-inria/gaussian-splatting?tab=readme-ov-file#interactive-viewers) or the [Online Viewer](https://playcanvas.com/supersplat/editor/).
+
+---
+
+**ModelSplat Fine-Tuning**
+The results of fine-tuning experiments are similarly stored in the [./experiments/exp-config/](./experiments/) folder.
+
+- **Accuracy Logging**: The fine-tuning accuracy (`acc`) is recorded in the `.log` file, where the best accuracy can be find where the best checkpoint `ckpt-best.pth` is saved.
 
 
 
