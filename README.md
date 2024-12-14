@@ -104,30 +104,15 @@ sh_base = sh_base.reshape(-1, 3)
 
 ## Installation
 
-We use **Conda** for environment setup with the following key configurations:  **Python Version**: 3.9  **PyTorch Version**: 1.12  **CUDA Version**: 11.3  
-
-You are encouraged to explore more advanced versions of PyTorch if needed. For detailed setup instructions, refer to the `.install.sh` script provided.
-
-We use conda for the environment setup, python 3.9 and torch 1.12 abd cuda 11.3 is used, you can explore more advanced torch version. You can follow the .install.sh for environment setup
+Set up conda environment with Python 3.9, PyTorch 2.0.1, and CUDA 11.8. 
 
 ```bash
-# git the repo
 git clone https://github.com/qimaqi/ShapeSplat-Gaussian_MAE.git
 cd ShapeSplat-Gaussian_MAE
-
-# create conda env
-conda create -n gaussian_mae python=3.9 -y 
-conda activate gaussian_mae
-
-# install torch, you can install more updated version
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
-
-# install dependency, if you use more updated torch, maybe need to modify requirements.txt
-pip install -r requirements.txt
-
+conda env create -f env.yaml
 ```
 
-## DATASET Preparation
+## Dataset Preparation
 
 Please refer to the instructions in the `DATA.md` file for detailed guidance on data preparation. The instructions cover:  
 - Preparing the pretraining dataset.  
@@ -175,7 +160,6 @@ In following example we show the example code to pretrain with E(All), G(xyz) de
 python main.py \
     --config cfgs/pretrain/pretrain_enc_full_group_xyz_1k.yaml \
     --exp_name gaussian_mae_enc_full_group_xyz_1k \
-    --num_workers=8 \
     # --resume 
 
 
