@@ -104,11 +104,12 @@ sh_base = sh_base.reshape(-1, 3)
 
 ## Installation
 
-Set up conda environment with Python 3.9, PyTorch 2.0.1, and CUDA 11.8. 
+Please set up provided conda environment with Python 3.9, PyTorch 2.0.1, and CUDA 11.8. 
 
 ```bash
 git clone https://github.com/qimaqi/ShapeSplat-Gaussian_MAE.git
 cd ShapeSplat-Gaussian_MAE
+conda config --set channel_priority flexible
 conda env create -f env.yaml
 ```
 
