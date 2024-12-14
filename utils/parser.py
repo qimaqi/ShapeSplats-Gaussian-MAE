@@ -20,7 +20,7 @@ def get_args():
                         help='test used ckpt path')
     parser.add_argument('--val_freq', type=int, default=1, help='test freq')
     parser.add_argument('--soft_knn', action='store_true',
-                        default=False, help='use soft knn in Encoder')
+                        default=True, help='use soft knn in Encoder')
     parser.add_argument('--data_path', type=str, default=None)  # dataset path
     parser.add_argument('--gs_path', type=str,
                         default=None)    # gs dataset path
