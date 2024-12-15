@@ -113,6 +113,7 @@ def run_net(args, config, train_writer=None, val_writer=None):
         num_iter = 0
 
         base_model.train()  # set model to training mode
+        base_model.zero_grad()
         n_batches = len(train_dataloader)
         npoints = config.npoints
         for idx, (taxonomy_ids, model_ids, data, scale_c, scale_m) in enumerate(train_dataloader):
@@ -132,9 +133,7 @@ def run_net(args, config, train_writer=None, val_writer=None):
                 random_idx = np.random.choice(points.size(1), npoints, False)
                 points = points[:, random_idx, :].contiguous()
 
-            # if epoch == 0 and idx % 10 == 0:
-            if epoch == config.max_epoch and idx % 10 == 0: # save last epoch ply for visualization
-            # save every 10 idx, change this frequency for your own need
+            if epoch == config.max_epoch and idx % 50 == 0: # save last epoch ply for visualization
                 loss_dict, vis_gaussians, full_rebuild_gaussian, original_gaussians = base_model(points, save=True)
                 # save to gaussian ply
                 os.makedirs(os.path.join(args.experiment_path, 'save_ply'), exist_ok=True)
