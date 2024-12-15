@@ -9,7 +9,7 @@ def get_args():
     parser.add_argument(
         '--launcher', choices=['none', 'pytorch'], default='none', help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
-    parser.add_argument('--num_workers', type=int, default=8)
+    parser.add_argument('--num_workers', type=int, default=16)
     parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--exp_name', type=str,
                         default='default', help='experiment name')
