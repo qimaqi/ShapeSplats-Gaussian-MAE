@@ -112,11 +112,11 @@ def run_net(args, config, train_writer=None, val_writer=None):
         builder.resume_optimizer(optimizer, args, logger = logger)
 
     # training
+    base_model.train()
     base_model.zero_grad()
     for epoch in range(start_epoch, config.max_epoch + 1):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        base_model.train()
 
         epoch_start_time = time.time()
         batch_start_time = time.time()
@@ -124,7 +124,6 @@ def run_net(args, config, train_writer=None, val_writer=None):
         data_time = AverageMeter()
         losses = AverageMeter(['loss', 'acc'])
         num_iter = 0
-        base_model.train()  # set model to training mode
         n_batches = len(train_dataloader)
         
         # print("config",config)

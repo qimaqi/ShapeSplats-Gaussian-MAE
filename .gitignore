@@ -74,13 +74,13 @@ target/
 .idea
 
 # VS Code
-.vscode/
+.vscode
 
 # Spyder
-.spyproject/
+.spyproject
 
 # Jupyter NB Checkpoints
-.ipynb_checkpoints/
+.ipynb_checkpoints
 
 # Mac OS-specific storage files
 .DS_Store
@@ -90,17 +90,18 @@ target/
 *.swo
 
 # Caches
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
+.mypy_cache
+.pytest_cache
+.ruff_cache
 
 outputs
 blender_install
 render
 
 
-experiments/
-sh_jobs/pretrain/joblogs/
-segmentation_gs/log/
-segmentation_gs/sh_jobs/joblogs/
+experiments
+sh_jobs/pretrain/joblogs
+segmentation_gs/log
+segmentation_gs/sh_jobs/joblogs
 wandb
+logs
