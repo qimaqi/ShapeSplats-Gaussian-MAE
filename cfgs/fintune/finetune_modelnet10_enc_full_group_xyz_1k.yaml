@@ -23,6 +23,7 @@ model : {
   NAME: PointTransformer,
   attribute: ['xyz','opacity','scale','rotation','sh'],
   group_attribute: ['xyz'],
+  soft_knn: True,
   trans_dim: 384,
   depth: 12,
   drop_path_rate: 0.1,
@@ -38,7 +39,7 @@ model : {
 
 npoints: 1024
 npoints_fps: True
-total_bs : 32
+total_bs : 224
 step_per_update : 1
 max_epoch : 300
 grad_norm_clip : 10

@@ -38,7 +38,7 @@ model : {
 
 npoints: 1028
 npoints_fps: True
-total_bs : 32
+total_bs : 224
 step_per_update : 1
 max_epoch : 300
 grad_norm_clip : 10
