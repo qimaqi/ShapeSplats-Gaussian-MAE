@@ -1,19 +1,21 @@
+import os 
+import time
+import wandb
 import torch
 import torch.nn as nn
+import numpy as np
+import matplotlib.pyplot as plt
+
 from tools import builder
 from utils import misc, dist_utils
-import time
 from utils.logger import *
 from utils.AverageMeter import AverageMeter
 
-import numpy as np
 from datasets import data_transforms
 from pointnet2_ops import pointnet2_utils
 from torchvision import transforms
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
-import matplotlib.pyplot as plt
 from PIL import Image
-import os 
 
 
 def draw_confusion_matrix(predict, tests, save_path, labels_num=40):
@@ -192,6 +194,8 @@ def run_net(args, config, train_writer=None, val_writer=None):
                 train_writer.add_scalar('Loss/Batch/Loss', loss.item(), n_itr)
                 train_writer.add_scalar('Loss/Batch/TrainAcc', acc.item(), n_itr)
                 train_writer.add_scalar('Loss/Batch/LR', optimizer.param_groups[0]['lr'], n_itr)
+            if args.use_wandb:
+                wandb.log({'train_loss': loss.item(), 'train_acc': acc.item(), 'lr': optimizer.param_groups[0]['lr']}, step=n_itr)
 
             batch_time.update(time.time() - batch_start_time)
             batch_start_time = time.time()
@@ -213,22 +217,14 @@ def run_net(args, config, train_writer=None, val_writer=None):
         if epoch % args.val_freq == 0 and epoch != 0:
             # Validate the current model
             metrics = validate(base_model, test_dataloader, epoch, val_writer, args, config, logger=logger)
-
             better = metrics.better_than(best_metrics)
             # Save ckeckpoints
             if better:
                 best_metrics = metrics
                 builder.save_checkpoint(base_model, optimizer, epoch, metrics, best_metrics, 'ckpt-best', args, logger = logger)
                 print_log("--------------------------------------------------------------------------------------------", logger=logger)
-            if args.vote:
-                if metrics.acc > 92.1 or (better and metrics.acc > 91):
-                    metrics_vote = validate_vote(base_model, test_dataloader, epoch, val_writer, args, config, logger=logger)
-                    if metrics_vote.better_than(best_metrics_vote):
-                        best_metrics_vote = metrics_vote
-                        print_log(
-                            "****************************************************************************************",
-                            logger=logger)
-                        builder.save_checkpoint(base_model, optimizer, epoch, metrics, best_metrics_vote, 'ckpt-best_vote', args, logger = logger)
+            if args.use_wandb:
+                wandb.log({'val_acc': metrics.acc, 'best_val_acc': best_metrics.acc, 'epoch': epoch})
 
         builder.save_checkpoint(base_model, optimizer, epoch, metrics, best_metrics, 'ckpt-last', args, logger = logger)      
         # if (config.max_epoch - epoch) < 10:
