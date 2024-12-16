@@ -195,7 +195,7 @@ Similar to pretrain, you have to define one config for each experiments. Notice 
 ## ShapeSplat-Part Segmentation finetune
 For ShapeSplat segmentation, we utilize the Gaussian splats generated for ShapeNet Part. Since ShapeNet Part is a subset of ShapeNet Core, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
 
-For simplicity, we follow the approach used in PointMAE and create a separate folder for part segmentation fine-tuning. Please refer to [segmentation_gs](./segmentation_gs/) for detailed usage instructions.
+For simplicity, we follow the approach in PointMAE and create a separate folder for part segmentation finetuning. Please refer to [segmentation_gs](./segmentation_gs/) for detailed usage instructions.
 
 
 ## Results:
@@ -217,10 +217,10 @@ By default, the results of pretraining are stored in the [./experiments/exp-conf
 
 ---
 
-**ModelSplat Fine-Tuning**
-The results of fine-tuning experiments are similarly stored in the [./experiments/exp-config/](./experiments/) folder.
+**ModelSplat Finetuning**
+The results of finetuning experiments are similarly stored in the [./experiments/exp-config/](./experiments/) folder.
 
-- **Accuracy Logging**: The fine-tuning accuracy (`acc`) is recorded in the `.log` file, where the best accuracy can be find where the best checkpoint `ckpt-best.pth` is saved.
+- **Accuracy Logging**: The best accuracy is logged with wandb, also you can find it in the `.log` file by searching for `ckpt-best.pth`.
 
 
 
