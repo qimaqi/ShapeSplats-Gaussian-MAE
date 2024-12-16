@@ -1,0 +1,5 @@
+NAME: ShapeNetGaussian
+DATA_PATH: /usr/bmicnas02/data-biwi-01/qimaqi_data/workspace/3dv_2025/ShapeSplat-Gaussian_MAE/datasets/shapenet_split
+GS_PATH: /usr/bmicnas01/data-biwi-01/qimaqi_data_bmicscratch/data/ws_dataset_bak/shapenet/shapenet_ply
+N_POINTS: 8192
+ATTRIBUTE: ['xyz','opacity','scale','rotation','sh']

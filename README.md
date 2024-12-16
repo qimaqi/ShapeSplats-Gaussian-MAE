@@ -27,7 +27,7 @@ $^\star$: Equal Contribution, $^\dagger$: Corresponding Author <br>
 - [x] `05.09.2024`: Our ShapeSplat [dataset](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1) part is released under the official ShapeNet repository! We thank the support from the ShapeNet team!
 - [x] `05.09.2024`: Dataset rendering code release in [render_scripts](./render_scripts)
 - [x] `08.09.2024`: The ModelNet-Splats is released on [Huggingface](https://huggingface.co/datasets/ShapeSplats/ModelNet_Splats). Please follow the ModelNet [term of use](https://modelnet.cs.princeton.edu/#).
-- [ ] Code release
+- [x] `16.12.2024`: Code release
 
 
 ## Method
@@ -53,11 +53,15 @@ We utilize our dataset for unsupervised pretraining and supervised finetuning fo
 
 
 ## Datasets
-You can Download the large scale pretrain dataset ShapeSplats in the  official ShapeNet [repository](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1).Due to file size limitations, some of the synsets may be split into multiple zip files (e.g. 03001627_0.zip and 03001627_1.zip). You can unzip data and merge them by using the [unzip.sh](scripts/unzip.sh): 
+You can download the ShapeSplat dataset from the official ShapeNet [repository](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1). Due to file size limitation, some of the subsets may be splitted into multiple zip files (e.g. 03001627_0.zip and 03001627_1.zip). You can unzip data and merge them by using the [unzip.sh](scripts/unzip.sh): 
 
-```python
-This ply format is commonly used for Gaussian splats and can be viewed using [online viewer](https://playcanvas.com/supersplat/editor/),you need load the ply file using <u>numpy</u> and <u>plyfile</u>.
-```python
+<details>
+  <summary>
+  <font>Read the 3DGS file</font>
+  </summary>
+  PLY format is commonly used for Gaussian splats and can be viewed using online viewer like supersplat. Also, you can load the ply file using <u>numpy</u> and <u>plyfile</u>.
+
+  ```python
 from plyfile import PlyData
 import numpy as np
 gs_vertex = PlyData.read('ply_path')['vertex']
@@ -100,8 +104,103 @@ sh_base[:, 1, 0] = gs_vertex['f_dc_1'].astype(np.float32)
 sh_base[:, 2, 0] = gs_vertex['f_dc_2'].astype(np.float32)
 sh_base = sh_base.reshape(-1, 3)
 ```
+</details>
+
 
 ## Installation
+
+Please set up provided conda environment with Python 3.9, PyTorch 2.0.1, and CUDA 11.8. 
+
+```bash
+git clone https://github.com/qimaqi/ShapeSplat-Gaussian_MAE.git
+cd ShapeSplat-Gaussian_MAE
+conda config --set channel_priority flexible
+conda env create -f env.yaml
+```
+
+## Dataset Preparation
+
+Please refer to the instructions in the `DATA.md` on data preparation. The instructions cover:  
+- Prepare the pretraining dataset.  
+- Set up finetuning datasets for classification and segmentation tasks.  
+- Update the data config and some environement parameters
+
+
+## Pretraining
+
+In this section, we outline the steps to pretrain the Gaussian-MAE model. For each setup, we use a config file located in the `cfgs/pretrain` directory.
+
+Below are some important parameters you can modify to create new experiment setups:
+
+- **`dataset.{split}.others.norm_attribute`** 
+This parameter connects with Section 4.2 of the paper, which discusses the attribute used for normalization.
+
+- **`model.group_size`** 
+Specifies the number of gaussians considered for one group/token.
+  
+- **`model.num_group`** 
+Specifies the number of groups/tokens.
+
+- **`model.attribute`** 
+The embedding feature discussed in Section 4.1 of the paper.
+
+- **`model.group_attribute`** 
+The grouping feature discussed in Section 4.1 of the paper.
+
+- **`npoints`** 
+The number of points after sampling from the input Gaussians is ablated in Table E.1 in the supplementary material. Note that you need to modify th `group_size` and `num_group` accordingly.
+
+- **`soft_knn`** 
+To enable the **splats pooling layer** discussed in Section 4.3 of the paper, in the experiments you should set group_attribute = ['xyz'] when enabling the soft KNN.
+
+
+In following example we show the example code to pretrain with E(All), G(xyz) defined in `pretrain_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/pretrain`. The command is shown below. Use the `--config` flag and set the experiment name in `--exp_name` accordingly. If the job is stopped and needs to be resumed, use the `--resume` flag.
+ 
+
+```bash
+python main.py \
+    --config cfgs/pretrain/pretrain_enc_full_group_xyz_1k.yaml \
+    --exp_name gaussian_mae_enc_full_group_xyz_1k \
+    # --resume 
+```
+
+
+## ModelNet Finetuning
+After pretraining, you can submit the finetuning task with `cls10_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/finetune`. Similar to pretraining, you have to define one config for each experiment. Notice that the finetuning parameters need to be aligned with the pretraining config.
+
+```bash
+PRETRAIN_CKPT=<The pretrain checkpoint above>
+
+# check if PRETRAIN_CKPT exists
+if [ ! -f "$PRETRAIN_CKPT" ]; then
+    echo "$PRETRAIN_CKPT does not exist."
+    exit 1
+fi
+
+python main.py \
+    --config cfgs/fintune/finetune_modelnet10_enc_full_group_xyz_1k.yaml \
+    --finetune_model \
+    --exp_name modelnet10_cls_enc_full_group_xyz_1k \
+    --seed 0 \
+    --ckpts ${PRETRAIN_CKPT}
+```
+
+## ShapeSplat-Part Segmentation
+For ShapeSplat-Part segmentation, we utilize the Gaussian splats generated for ShapeNet-Part. Since ShapeNet-Part is a subset of ShapeNetCore, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
+
+For simplicity, we follow the approach in PointMAE and create a separate folder for part segmentation finetuning. Please refer to [segmentation_gs](./segmentation_gs/) for detailed usage instructions.
+
+
+## Results
+**Pretraining** results are stored in the [experiments/exp-config/](./experiments/) folder. Within this folder, you will find the `<exp_name>` and `TFBoard` subdirectories.
+
+- **TensorBoard Logging**: Pretraining loss is logged in TensorBoard.
+- **Using Weights & Biases**: To log metrics via Weights & Biases, pass the `--use_wandb` argument during training.
+- **Gaussian Reconstruction**: The reconstructed Gaussians from the last epoch are saved in the `save_ply` folder. These can be visualized using standard Gaussian visualization tools like the [Interactive Viewer](https://github.com/graphdeco-inria/gaussian-splatting?tab=readme-ov-file#interactive-viewers) or the [Online Viewer](https://playcanvas.com/supersplat/editor/).
+
+**ModelSplat finetuning** results are similarly stored in the [experiments/exp-config/](./experiments/) folder.
+
+- **Accuracy Logging**: The best accuracy is logged with wandb, also you can find it in the `.log` file by searching for `ckpt-best.pth`.
 
 
 
