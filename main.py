@@ -17,8 +17,6 @@ def main():
     if args.use_gpu:
         torch.backends.cudnn.benchmark = True
     # init distributed env first, since logger depends on the dist info.
-    if args.use_wandb:
-        wandb.init(project='Gaussian-MAE', config=args, name=args.exp_name)
     if args.launcher == 'none':
         args.distributed = False
     else:
@@ -79,7 +77,9 @@ def main():
         config.dataset.val.others.shot = args.shot
         config.dataset.val.others.way = args.way
         config.dataset.val.others.fold = args.fold
-    
+        
+    if args.use_wandb:
+        wandb.init(project='Gaussian-MAE', config=config, name=args.exp_name)
     # run
     if args.test:
         test_net(args, config)
