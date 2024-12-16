@@ -126,9 +126,9 @@ Please refer to the instructions in the `DATA.md` on data preparation. The instr
 - Update the data config and some environement parameters
 
 
-## Pretrain
+## Pretraining
 
-In this section, we outline the steps for pretrain the Gaussian-MAE model. For each setup, we use a config file located in the `cfgs/pretrain` directory.
+In this section, we outline the steps to pretrain the Gaussian-MAE model. For each setup, we use a config file located in the `cfgs/pretrain` directory.
 
 Below are some important parameters you can modify to create new experiment setups:
 
@@ -186,7 +186,7 @@ python main.py \
 ```
 
 ## ShapeSplat-Part Segmentation
-For ShapeSplat-Part segmentation, we utilize the Gaussian splats generated for ShapeNet Part. Since ShapeNet-Part is a subset of ShapeNetCore, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
+For ShapeSplat-Part segmentation, we utilize the Gaussian splats generated for ShapeNet-Part. Since ShapeNet-Part is a subset of ShapeNetCore, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
 
 For simplicity, we follow the approach in PointMAE and create a separate folder for part segmentation finetuning. Please refer to [segmentation_gs](./segmentation_gs/) for detailed usage instructions.
 
