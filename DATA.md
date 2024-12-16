@@ -6,7 +6,7 @@ This section provides instructions on downloading and preparing the following da
 - **ShapeSplat-Part Dataset**  
 
 ## ShapeSplat Dataset
-1. **Request Dataset Access**  
+1. **Request Access**  
    Obtain access to the ShapeNet dataset from the [Hugging Face page](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1). Approval may take approximately **1–2 days**.  
 
 2. **Download the Dataset**  
@@ -22,7 +22,11 @@ This section provides instructions on downloading and preparing the following da
    Replace `<Your Hugging Face Token>` with your personal access token from Hugging Face.
 
 3. **Process the Dataset**   
-   After downloading the dataset, you will find multiple `.zip` files in the target folder. Use the provided script `./scripts/unzip_shapesplat.sh` to extract all the files.  The extracted files will follow the structure below, with all .ply files named in the format: `< {category_id}-{object_id}.ply>`.
+   After downloading the dataset, you will find multiple `.zip` files in the target folder. Use the provided script `./scripts/unzip_shapesplat.sh` to extract all the files. Update the script with the following values:  
+   - `<SOURCE_DIR>`: Path to the folder where the downloaded `.zip` files are located.  
+   - `<DEST_DIR>`: Path to the folder where you want the data to be extracted.   
+   
+   The extracted files will follow the structure below, with all .ply files named in the format: `< {category_id}-{object_id}.ply>`.
 
    ```
    shapesplat_ply
@@ -34,27 +38,12 @@ This section provides instructions on downloading and preparing the following da
 
    ``` 
 
-   Update the script with the following values:  
-   - **`<SOURCE_DIR>`**: Path to the folder where the downloaded `.zip` files are located.  
-   - **`<DEST_DIR>`**: Path to the folder where you want the data to be extracted.  
 
-   Run the script to complete the unzipping process.
-
-
-   ```
-
-      # Directory containing the .zip files
-      SOURCE_DIR=../gs_data/shapesplat/
-      # Directory where all extracted files will be merged
-      DEST_DIR=../gs_data/shapesplat/shapesplat_ply
-      
-   ```
-
-4. **Prepare the Dataset config**  
+1. **Prepare the Dataset config**  
    The `ShapeNet55GS.yaml` file is located in the `cfgs/dataset_configs` directory. Please set the following paths:  
 
-   - **`DATA_PATH`**: Set this to `datasets/shapenet_split`.  
-   - **`GS_PATH`**: Set this to the directory where you extracted the `.ply` files.  
+   - `DATA_PATH`: Set this to `datasets/shapenet_split`.  
+   - `GS_PATH`: Set this to the directory where you extracted the `.ply` files.  
 
 ## ModelSplat Dataset
 1. **Download the Dataset**  
@@ -68,7 +57,7 @@ This section provides instructions on downloading and preparing the following da
    ```
    Replace `<Your Hugging Face Token>` with your personal access token from Hugging Face.
 
-2. **Process the Dataset**
+2. **Process the Dataset**    
    After downloading there will be a lot of .zip files, we want to unzip to following data structure:
 
    ```
@@ -91,29 +80,25 @@ This section provides instructions on downloading and preparing the following da
 
    ```
 
-   Using the provided script `./scripts/unzip_modelsplat.sh`, you only need to configure the following parameters to begin the unzipping process.  
-      - **`<SOURCE_DIR>`**: Path to the folder where the downloaded `.zip` files are located.  
-      - **`<DEST_DIR>`**: Path to the folder where you want the data to be extracted.  
+   Please use the provided script `./scripts/unzip_modelsplat.sh` and configure the paths for unzipping.  
+      - `<SOURCE_DIR>`: Path to the folder where the downloaded `.zip` files are located.  
+      - `<DEST_DIR>`: Path to the folder where you want the data to be extracted.  
 
 
 
-3. **Prepare the Dataset config**
+3. **Prepare the Dataset config**    
    The `ModelNet10GS.yaml` and `ModelNet40GS.yaml`  files are located in the `cfgs/dataset_configs` directory. Please set the following paths:  
 
-   - **`DATA_PATH`**: Set this to `datasets/modelnet_split` folder inside the repo.  
-   - **`GS_PATH`**: Set this to the directory where you extracted the `.ply` files.   
+   - `DATA_PATH`: Set this to `datasets/modelnet_split` folder inside the repo.  
+   - `GS_PATH`: Set this to the directory where you extracted the `.ply` files.   
 
 
 ## ShapeSplat-Part Dataset
-1. **Download the Dataset** 
-   
-   You can officially download the Shape-Part annotations from the following [link](https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0_normal.zip).  
-
-   If the official link is unavailable, you can also download the dataset from our [Hugging Face repository](https://huggingface.co/datasets/ShapeSplats/sharing/tree/main).  
-
+1. **Download the Dataset**     
+   You can officially download the Shape-Part annotations from the following [link](https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0_normal.zip).  If the official link is unavailable, you can also download the dataset from our [Hugging Face repository](https://huggingface.co/datasets/ShapeSplats/sharing/tree/main).  
 
    After unzipping shapenetcore_partanno_segmentation_benchmark_v0_normal.zip, you need to update the following environment variables:
 
-   `PARTANNO_ROOT`
-   **`GS_ROOT`** (Note: This should be the same as the GS_PATH used for ShapeSplat)
-   **`PC_ROOT`** (Note: This is the path where to `shape_data`  the pointcloud annotation)
+   - `PARTANNO_ROOT`
+   - `GS_ROOT` (Note: This should be the same as the GS_PATH used for ShapeSplat)
+   - `PC_ROOT` (Note: This is the path where to `shape_data`  the pointcloud annotation)

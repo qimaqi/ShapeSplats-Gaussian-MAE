@@ -115,15 +115,15 @@ conda env create -f env.yaml
 
 ## Dataset Preparation
 
-Please refer to the instructions in the `DATA.md` file for detailed guidance on data preparation. The instructions cover:  
-- Preparing the pretraining dataset.  
-- Setting up finetuning datasets for classification and segmentation tasks.  
+Please refer to the instructions in the `DATA.md` file on data preparation. The instructions cover:  
+- Prepare the pretraining dataset.  
+- Set up finetuning datasets for classification and segmentation tasks.  
 - Update the data config and some environement parameters
 
 
 ## Pretrain
 
-In this section, we outline the steps for pretraining the Gaussian-MAE model. For each setup, we use a config file located in the ShapeSplat-Gaussian_MAE/cfgs/pretrain/ directory.
+In this section, we outline the steps for pretraining the Gaussian-MAE model. For each setup, we use a config file located in the `cfgs/pretrain` directory.
 
 Below are some important parameters you can modify to create new experiment setups:
 
@@ -164,7 +164,7 @@ python main.py \
 
 
 ## ModelNet Finetuning
-After pretraining, you can parse the checkpoints path in `cls10_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/finetune`
+After pretraining, you can submit the finetuning task with `cls10_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/finetune`
 
 ```bash
 PRETRAIN_CKPT=<The pretrain checkpoint above>
@@ -175,26 +175,24 @@ if [ ! -f "$PRETRAIN_CKPT" ]; then
     exit 1
 fi
 
-
 python main.py \
     --config cfgs/fintune/finetune_modelnet10_enc_full_group_xyz_1k.yaml \
     --finetune_model \
     --exp_name modelnet10_cls_enc_full_group_xyz_1k \
     --seed 0 \
     --ckpts ${PRETRAIN_CKPT}
-
 ```
 
-Similar to pretrain, you have to define one config for each experiments. Notice that the finetune config need to be align with the pretrain config parameters.
+Similar to pretraining, you have to define one config for each experiment. Notice that the finetuning config parameters need to be aligned with the pretraining config.
 
 
 ## ShapeSplat-Part Segmentation
-For ShapeSplat segmentation, we utilize the Gaussian splats generated for ShapeNet Part. Since ShapeNet Part is a subset of ShapeNet Core, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
+For ShapeSplat-Part segmentation, we utilize the Gaussian splats generated for ShapeNet Part. Since ShapeNet-Part is a subset of ShapeNetCore, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
 
 For simplicity, we follow the approach in PointMAE and create a separate folder for part segmentation finetuning. Please refer to [segmentation_gs](./segmentation_gs/) for detailed usage instructions.
 
 
-## Results:
+## Results
 <!-- For pretrain the results can be found in the [./experiments/<exp-config>/](./experiments/) folder by default. You can find **<exp_name>** and **TFBoard** folders under this folder. The pretrain loss is logged in the tensorboard and you can use wandb by parsing --use_wandb arguments. The reconstructed gaussian of last epoch is stored in folder save_ply, you can visualize through standard gaussian visualzier tool like [Interactiver Viewer](https://github.com/graphdeco-inria/gaussian-splatting?tab=readme-ov-file#interactive-viewers) or [online viewer](https://playcanvas.com/supersplat/editor/).
 
 For modelsplats finetune experiments similarilly you can find the finetune results under [./experiments/<exp-config>/](./experiments/). We log the value acc in .log file where it show as best ckpt.
