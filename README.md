@@ -27,7 +27,7 @@ $^\star$: Equal Contribution, $^\dagger$: Corresponding Author <br>
 - [x] `05.09.2024`: Our ShapeSplat [dataset](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1) part is released under the official ShapeNet repository! We thank the support from the ShapeNet team!
 - [x] `05.09.2024`: Dataset rendering code release in [render_scripts](./render_scripts)
 - [x] `08.09.2024`: The ModelNet-Splats is released on [Huggingface](https://huggingface.co/datasets/ShapeSplats/ModelNet_Splats). Please follow the ModelNet [term of use](https://modelnet.cs.princeton.edu/#).
-- [ ] Code release
+- [x] `16.12.2024`: Code release
 
 
 ## Method
@@ -53,11 +53,15 @@ We utilize our dataset for unsupervised pretraining and supervised finetuning fo
 
 
 ## Datasets
-You can Download the large scale pretrain dataset ShapeSplats in the  official ShapeNet [repository](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1).Due to file size limitations, some of the synsets may be split into multiple zip files (e.g. 03001627_0.zip and 03001627_1.zip). You can unzip data and merge them by using the [unzip.sh](scripts/unzip.sh): 
+You can download the ShapeSplat dataset from the official ShapeNet [repository](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1). Due to file size limitation, some of the subsets may be splitted into multiple zip files (e.g. 03001627_0.zip and 03001627_1.zip). You can unzip data and merge them by using the [unzip.sh](scripts/unzip.sh): 
 
-```python
-This ply format is commonly used for Gaussian splats and can be viewed using [online viewer](https://playcanvas.com/supersplat/editor/),you need load the ply file using <u>numpy</u> and <u>plyfile</u>.
-```python
+<details>
+  <summary>
+  <font>Read the 3DGS file</font>
+  </summary>
+  PLY format is commonly used for Gaussian splats and can be viewed using online viewer like supersplat. Also, you can load the ply file using <u>numpy</u> and <u>plyfile</u>.
+
+  ```python
 from plyfile import PlyData
 import numpy as np
 gs_vertex = PlyData.read('ply_path')['vertex']
@@ -100,6 +104,7 @@ sh_base[:, 1, 0] = gs_vertex['f_dc_1'].astype(np.float32)
 sh_base[:, 2, 0] = gs_vertex['f_dc_2'].astype(np.float32)
 sh_base = sh_base.reshape(-1, 3)
 ```
+</details>
 
 
 ## Installation
@@ -115,7 +120,7 @@ conda env create -f env.yaml
 
 ## Dataset Preparation
 
-Please refer to the instructions in the `DATA.md` file on data preparation. The instructions cover:  
+Please refer to the instructions in the `DATA.md` on data preparation. The instructions cover:  
 - Prepare the pretraining dataset.  
 - Set up finetuning datasets for classification and segmentation tasks.  
 - Update the data config and some environement parameters
@@ -123,7 +128,7 @@ Please refer to the instructions in the `DATA.md` file on data preparation. The 
 
 ## Pretrain
 
-In this section, we outline the steps for pretraining the Gaussian-MAE model. For each setup, we use a config file located in the `cfgs/pretrain` directory.
+In this section, we outline the steps for pretrain the Gaussian-MAE model. For each setup, we use a config file located in the `cfgs/pretrain` directory.
 
 Below are some important parameters you can modify to create new experiment setups:
 
@@ -149,22 +154,19 @@ The number of points after sampling from the input Gaussians is ablated in Table
 To enable the **splats pooling layer** discussed in Section 4.3 of the paper, in the experiments you should set group_attribute = ['xyz'] when enabling the soft KNN.
 
 
-In following example we show the example code to pretrain with E(All), G(xyz) define in `pretrain_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/pretrain`. The main body of the code is shown below. To define the experiment configuration, use the `--config` flag and set the experiment name in `--exp_name`accordingly. If the job is stopped and needs to be resumed, use the `--resume` flag.
+In following example we show the example code to pretrain with E(All), G(xyz) defined in `pretrain_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/pretrain`. The command is shown below. Use the `--config` flag and set the experiment name in `--exp_name` accordingly. If the job is stopped and needs to be resumed, use the `--resume` flag.
  
-
 
 ```bash
 python main.py \
     --config cfgs/pretrain/pretrain_enc_full_group_xyz_1k.yaml \
     --exp_name gaussian_mae_enc_full_group_xyz_1k \
     # --resume 
-
-
 ```
 
 
 ## ModelNet Finetuning
-After pretraining, you can submit the finetuning task with `cls10_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/finetune`
+After pretraining, you can submit the finetuning task with `cls10_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/finetune`. Similar to pretraining, you have to define one config for each experiment. Notice that the finetuning parameters need to be aligned with the pretraining config.
 
 ```bash
 PRETRAIN_CKPT=<The pretrain checkpoint above>
@@ -182,9 +184,6 @@ python main.py \
     --seed 0 \
     --ckpts ${PRETRAIN_CKPT}
 ```
-
-Similar to pretraining, you have to define one config for each experiment. Notice that the finetuning config parameters need to be aligned with the pretraining config.
-
 
 ## ShapeSplat-Part Segmentation
 For ShapeSplat-Part segmentation, we utilize the Gaussian splats generated for ShapeNet Part. Since ShapeNet-Part is a subset of ShapeNetCore, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
