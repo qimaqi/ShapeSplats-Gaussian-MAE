@@ -128,11 +128,7 @@ In this section, we outline the steps for pretraining the Gaussian-MAE model. Fo
 Below are some important parameters you can modify to create new experiment setups:
 
 - **`dataset.{split}.others.norm_attribute`** 
-
 This parameter connects with Section 4.2 of the paper, which discusses the attribute used for normalization.
-
-- **`model.norm_attribute`** 
-Specifies how many splats are considered in each group to map to one token.
 
 - **`model.group_size`** 
 Specifies the number of gaussians considered for one group/token.
@@ -150,7 +146,7 @@ The grouping feature discussed in Section 4.1 of the paper.
 The number of points after sampling from the input Gaussians is ablated in Table E.1 in the supplementary material. Note that you need to modify th `group_size` and `num_group` accordingly.
 
 - **`soft_knn`** 
-To enable the ***Splat pooling layer*** discussed in Section 4.3 of the paper, in the experiments you should set group_attribute = ['xyz'] when enabling the soft KNN.
+To enable the **splats pooling layer** discussed in Section 4.3 of the paper, in the experiments you should set group_attribute = ['xyz'] when enabling the soft KNN.
 
 
 In following example we show the example code to pretrain with E(All), G(xyz) define in `pretrain_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/pretrain`. The main body of the code is shown below. To define the experiment configuration, use the `--config` flag and set the experiment name in `--exp_name`accordingly. If the job is stopped and needs to be resumed, use the `--resume` flag.
@@ -167,7 +163,7 @@ python main.py \
 ```
 
 
-## ModelNet Finetune
+## ModelNet Finetuning
 After pretraining, you can parse the checkpoints path in `cls10_job_enc_full_group_xyz_1k.sh` in  `sh_jobs/finetune`
 
 ```bash
@@ -192,7 +188,7 @@ python main.py \
 Similar to pretrain, you have to define one config for each experiments. Notice that the finetune config need to be align with the pretrain config parameters.
 
 
-## ShapeSplat-Part Segmentation finetune
+## ShapeSplat-Part Segmentation
 For ShapeSplat segmentation, we utilize the Gaussian splats generated for ShapeNet Part. Since ShapeNet Part is a subset of ShapeNet Core, please refer to [DATA.md](./DATA.md) for instructions on downloading the segmentation annotation files.
 
 For simplicity, we follow the approach in PointMAE and create a separate folder for part segmentation finetuning. Please refer to [segmentation_gs](./segmentation_gs/) for detailed usage instructions.

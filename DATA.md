@@ -3,9 +3,9 @@
 This section provides instructions on downloading and preparing the following datasets:  
 - **ShapeSplat Dataset**  
 - **ModelSplat Dataset**  
-- **ShapeNet-Part Dataset**  
+- **ShapeSplat-Part Dataset**  
 
-## ShapeSplat pretrain dataset
+## ShapeSplat Dataset
 1. **Request Dataset Access**  
    Obtain access to the ShapeNet dataset from the [Hugging Face page](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1). Approval may take approximately **1–2 days**.  
 
@@ -56,7 +56,7 @@ This section provides instructions on downloading and preparing the following da
    - **`DATA_PATH`**: Set this to `datasets/shapenet_split`.  
    - **`GS_PATH`**: Set this to the directory where you extracted the `.ply` files.  
 
-## ModelSplat finetune dataset
+## ModelSplat Dataset
 1. **Download the Dataset**  
    Similarly, you can download the modelsplat in [ModelNetSplats Dataset Release](https://huggingface.co/datasets/ShapeSplats/ModelNet_Splats)
 
@@ -104,7 +104,7 @@ This section provides instructions on downloading and preparing the following da
    - **`GS_PATH`**: Set this to the directory where you extracted the `.ply` files.   
 
 
-## ShapeSplat Part-Seg finetune dataset
+## ShapeSplat-Part Dataset
 1. **Download the Dataset** 
    
    You can officially download the Shape-Part annotations from the following [link](https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0_normal.zip).  
