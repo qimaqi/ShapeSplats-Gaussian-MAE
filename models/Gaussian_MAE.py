@@ -1,18 +1,13 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import timm
-from timm.models.layers import DropPath, trunc_normal_
-import numpy as np
+from timm.models.layers import trunc_normal_
 from .build import MODELS
-from utils import misc
 from utils.checkpoint import (
     get_missing_parameters_message,
     get_unexpected_parameters_message,
 )
 from utils.logger import print_log
 import random
-from time import time
 from knn_cuda import KNN
 from models.transformer import (
     TransformerEncoder,
@@ -22,9 +17,7 @@ from models.transformer import (
     SoftEncoder,
 )
 from pytorch3d.loss import chamfer_distance
-from utils.gaussian import eval_sh, SH2RGB
 
-from utils import rotation_conversions
 
 # pretrain model
 class MaskTransformer(nn.Module):
@@ -41,8 +34,7 @@ class MaskTransformer(nn.Module):
         # embedding
         self.encoder_dims = config.transformer_config.encoder_dims
         self.encoder = (
-            Encoder(encoder_channel=self.encoder_dims,
-                    attribute=config.attribute)
+            Encoder(encoder_channel=self.encoder_dims, attribute=config.attribute)
             if not kwargs.get("soft_knn", False)
             else SoftEncoder(
                 encoder_channel=self.encoder_dims, attribute=config.attribute
@@ -52,35 +44,31 @@ class MaskTransformer(nn.Module):
         self.mask_type = config.transformer_config.mask_type
         self.group_attribite = config.group_attribute
         self.norm_attribute = config.norm_attribute
-        
-        self.pos_feature_dim = []
-        if 'xyz' in config.group_attribute:
-            self.pos_feature_dim.extend([0,1,2])
 
-        if 'opacity' in config.group_attribute:
-   
+        self.pos_feature_dim = []
+        if "xyz" in config.group_attribute:
+            self.pos_feature_dim.extend([0, 1, 2])
+
+        if "opacity" in config.group_attribute:
             self.pos_feature_dim.append(3)
 
-        if 'scale' in config.group_attribute:
-    
-            self.pos_feature_dim.extend([4,5,6])
+        if "scale" in config.group_attribute:
+            self.pos_feature_dim.extend([4, 5, 6])
 
-        if 'rotation' in config.group_attribute:
+        if "rotation" in config.group_attribute:
+            self.pos_feature_dim.extend([7, 8, 9, 10])
 
-            self.pos_feature_dim.extend([7,8,9,10])
-
-        if 'sh' in config.group_attribute:
+        if "sh" in config.group_attribute:
             # here we use only first 3 sh, since most dataset color is simple
-            self.pos_feature_dim.extend([11,12,13])
-            
+            self.pos_feature_dim.extend([11, 12, 13])
+
         self.pos_embed = nn.Sequential(
             nn.Linear(len(self.pos_feature_dim), 128),
             nn.GELU(),
             nn.Linear(128, self.trans_dim),
         )
 
-        dpr = [x.item() for x in torch.linspace(
-            0, self.drop_path_rate, self.depth)]
+        dpr = [x.item() for x in torch.linspace(0, self.drop_path_rate, self.depth)]
         self.blocks = TransformerEncoder(
             embed_dim=self.trans_dim,
             depth=self.depth,
@@ -123,8 +111,7 @@ class MaskTransformer(nn.Module):
                 points[:, index].reshape(1, 1, 3) - points, p=2, dim=-1
             )  # 1 1 3 - 1 G 3 -> 1 G
 
-            idx = torch.argsort(distance_matrix, dim=-1,
-                                descending=False)[0]  # G
+            idx = torch.argsort(distance_matrix, dim=-1, descending=False)[0]  # G
             ratio = self.mask_ratio
             mask_num = int(ratio * len(idx))
             mask = torch.zeros(len(idx))
@@ -145,8 +132,7 @@ class MaskTransformer(nn.Module):
         _, selected_indices = torch.topk(
             rand_indices, self.num_mask, dim=1, largest=False
         )
-        overall_mask = torch.zeros(
-            B, G, dtype=torch.bool, device=center.device)
+        overall_mask = torch.zeros(B, G, dtype=torch.bool, device=center.device)
         overall_mask.scatter_(1, selected_indices, True)
 
         return overall_mask
@@ -164,8 +150,7 @@ class MaskTransformer(nn.Module):
         """
         # generate mask
         if self.mask_type == "rand":
-            bool_masked_pos = self._mask_center_rand(
-                center, noaug=noaug)  # B G
+            bool_masked_pos = self._mask_center_rand(center, noaug=noaug)  # B G
         else:
             bool_masked_pos = self._mask_center_block(center, noaug=noaug)
 
@@ -173,9 +158,13 @@ class MaskTransformer(nn.Module):
         group_input_tokens = self.encoder(neighborhood)
         batch_size, seq_len, C = group_input_tokens.size()
 
-        x_vis = group_input_tokens[~bool_masked_pos].reshape(batch_size, -1, C) # B, 0.4G, C
+        x_vis = group_input_tokens[~bool_masked_pos].reshape(
+            batch_size, -1, C
+        )  # B, 0.4G, C
 
-        masked_center = center[~bool_masked_pos].reshape(batch_size, -1, len(self.pos_feature_dim))
+        masked_center = center[~bool_masked_pos].reshape(
+            batch_size, -1, len(self.pos_feature_dim)
+        )
         pos = self.pos_embed(masked_center)
 
         # transformer
@@ -190,7 +179,7 @@ class MaskTransformer(nn.Module):
 class Gaussian_MAE(nn.Module):
     def __init__(self, config):
         super().__init__()
-        print_log(f"[Gaussian_MAE] ", logger="Gaussian_MAE")
+        print_log("[Gaussian_MAE] ", logger="Gaussian_MAE")
         self.config = config
         self.soft_knn = getattr(config, "soft_knn", False)
         self.trans_dim = config.transformer_config.trans_dim
@@ -205,29 +194,27 @@ class Gaussian_MAE(nn.Module):
         self.norm_attribute = config.norm_attribute
 
         self.pos_feature_dim = []
-        if 'xyz' in config.group_attribute:
-            self.pos_feature_dim.extend([0,1,2])
+        if "xyz" in config.group_attribute:
+            self.pos_feature_dim.extend([0, 1, 2])
 
-        if 'opacity' in config.group_attribute:
-   
+        if "opacity" in config.group_attribute:
             self.pos_feature_dim.append(3)
 
-        if 'scale' in config.group_attribute:
-    
-            self.pos_feature_dim.extend([4,5,6])
+        if "scale" in config.group_attribute:
+            self.pos_feature_dim.extend([4, 5, 6])
 
-        if 'rotation' in config.group_attribute:
+        if "rotation" in config.group_attribute:
+            self.pos_feature_dim.extend([7, 8, 9, 10])
 
-            self.pos_feature_dim.extend([7,8,9,10])
-
-        if 'sh' in config.group_attribute:
-       
-            self.pos_feature_dim.extend([11,12,13])
+        if "sh" in config.group_attribute:
+            self.pos_feature_dim.extend([11, 12, 13])
 
         print("pos embedding size", self.pos_feature_dim)
         print("group_attribute", self.group_attribute)
         self.decoder_pos_embed = nn.Sequential(
-            nn.Linear(len(self.pos_feature_dim), 128), nn.GELU(), nn.Linear(128, self.trans_dim)
+            nn.Linear(len(self.pos_feature_dim), 128),
+            nn.GELU(),
+            nn.Linear(128, self.trans_dim),
         )
 
         self.decoder_depth = config.transformer_config.decoder_depth
@@ -261,16 +248,18 @@ class Gaussian_MAE(nn.Module):
         # predication head for density
         if "opacity" in self.attribute:
             self.opacity_head = nn.Sequential(
-                nn.Conv1d(self.trans_dim, 1 * self.group_size, 1), 
-                nn.Sigmoid() if not 'opacity' in self.norm_attribute else nn.Tanh() # otherwise the opacity range is [-1, 1]
+                nn.Conv1d(self.trans_dim, 1 * self.group_size, 1),
+                (
+                    nn.Sigmoid() if "opacity" not in self.norm_attribute else nn.Tanh()
+                ),  # otherwise the opacity range is [-1, 1]
             )
 
         if "scale" in self.attribute and "rotation" in self.attribute:
             self.scale_head = nn.Sequential(
-                nn.Conv1d(self.trans_dim, 3 * self.group_size, 1), 
-                nn.ReLU() if not 'scale' in self.norm_attribute else nn.Tanh() 
+                nn.Conv1d(self.trans_dim, 3 * self.group_size, 1),
+                nn.ReLU() if "scale" not in self.norm_attribute else nn.Tanh(),
             )
-            
+
             self.rotation_head = nn.Sequential(
                 nn.Conv1d(self.trans_dim, 4 * self.group_size, 1), nn.Tanh()
             )
@@ -287,7 +276,7 @@ class Gaussian_MAE(nn.Module):
         opacity_index = [3]
         scale_index = [4, 5, 6]
         rotation_index = [7, 8, 9, 10]
-        sh_index = [11, 12, 13] 
+        sh_index = [11, 12, 13]
 
         neighborhood, center = self.group_divider(pts)
 
@@ -296,11 +285,9 @@ class Gaussian_MAE(nn.Module):
         B, _, C = x_vis.shape  # B VIS C
         feature_dim = neighborhood.shape[-1]
 
-        pos_emd_vis = self.decoder_pos_embed(
-            center_pos[~mask]).reshape(B, -1, C)
+        pos_emd_vis = self.decoder_pos_embed(center_pos[~mask]).reshape(B, -1, C)
 
-        pos_emd_mask = self.decoder_pos_embed(
-            center_pos[mask]).reshape(B, -1, C)
+        pos_emd_mask = self.decoder_pos_embed(center_pos[mask]).reshape(B, -1, C)
 
         _, N, _ = pos_emd_mask.shape
         mask_token = self.mask_token.expand(B, N, -1)
@@ -330,8 +317,7 @@ class Gaussian_MAE(nn.Module):
                 .transpose(1, 2)
                 .reshape(B * M, -1, 1)
             )  # B M 1024
-            gt_density = neighborhood[...,
-                                      opacity_index][mask].reshape(B * M, -1, 1)
+            gt_density = neighborhood[..., opacity_index][mask].reshape(B * M, -1, 1)
             # L1 loss for density
             loss2 = torch.nn.functional.l1_loss(rebuild_density, gt_density)
             loss_dict["density"] = loss2
@@ -342,8 +328,7 @@ class Gaussian_MAE(nn.Module):
                 .transpose(1, 2)
                 .reshape(B * M, -1, 3)
             )
-            gt_scale = neighborhood[...,
-                                    scale_index][mask].reshape(B * M, -1, 3)
+            gt_scale = neighborhood[..., scale_index][mask].reshape(B * M, -1, 3)
 
             rebuild_rotation = (
                 self.rotation_head(x_rec.transpose(1, 2))
@@ -355,11 +340,9 @@ class Gaussian_MAE(nn.Module):
             rebuild_rotation = rebuild_rotation / (
                 torch.norm(rebuild_rotation, p=2, dim=-1, keepdim=True) + 1e-9
             )
-            gt_rotation = neighborhood[..., rotation_index][mask].reshape(
-                B * M, -1, 4)
+            gt_rotation = neighborhood[..., rotation_index][mask].reshape(B * M, -1, 4)
 
-            loss_scale = torch.nn.functional.l1_loss(
-                rebuild_scale, gt_scale)  # * 0.01
+            loss_scale = torch.nn.functional.l1_loss(rebuild_scale, gt_scale)  # * 0.01
             loss_rotation = torch.nn.functional.l1_loss(
                 rebuild_rotation, gt_rotation
             )  # * 0.01 # try L1 first
@@ -411,18 +394,21 @@ class Gaussian_MAE(nn.Module):
             vis_gaussians = neighborhood[~mask].reshape(
                 B * (self.num_group - M), -1, feature_dim
             )[..., :14]
-            vis_gaussians[..., :3] = vis_gaussians[..., :3] + center_pos[...,:3][
+            vis_gaussians[..., :3] = vis_gaussians[..., :3] + center_pos[..., :3][
                 ~mask
-            ].unsqueeze(1)  # xyz position back to world
-            rebuild_gaussians[..., :3] = rebuild_gaussians[..., :3] + center_pos[...,:3][
-                mask
-            ].unsqueeze(1)
+            ].unsqueeze(
+                1
+            )  # xyz position back to world
+            rebuild_gaussians[..., :3] = rebuild_gaussians[..., :3] + center_pos[
+                ..., :3
+            ][mask].unsqueeze(1)
 
             vis_gaussians = vis_gaussians.reshape(B, -1, vis_gaussians.shape[-1])
 
-            rebuild_gaussians = rebuild_gaussians.reshape(B, -1, rebuild_gaussians.shape[-1])
-            full_gaussian = torch.cat(
-                [rebuild_gaussians, vis_gaussians], dim=1)
+            rebuild_gaussians = rebuild_gaussians.reshape(
+                B, -1, rebuild_gaussians.shape[-1]
+            )
+            full_gaussian = torch.cat([rebuild_gaussians, vis_gaussians], dim=1)
             original_gaussian = pts.clone().detach()
 
             return loss_dict, vis_gaussians, full_gaussian, original_gaussian
@@ -450,17 +436,15 @@ class PointTransformer(nn.Module):
         self.attribute = config.attribute
 
         self.group_attribute = config.group_attribute
-
-
         self.group_divider = Group(
-            num_group=self.num_group, 
+            num_group=self.num_group,
             group_size=self.group_size,
             attribute=config.group_attribute,
-            soft_knn=self.soft_knn)
+            soft_knn=self.soft_knn,
+        )
 
         self.encoder = (
-            SoftEncoder(encoder_channel=self.encoder_dims,
-                        attribute=config.attribute)
+            SoftEncoder(encoder_channel=self.encoder_dims, attribute=config.attribute)
             if self.soft_knn
             else Encoder(encoder_channel=self.encoder_dims, attribute=config.attribute)
         )
@@ -478,7 +462,7 @@ class PointTransformer(nn.Module):
         if "scale" in config.group_attribute:
             self.pos_feature_dim.extend([4, 5, 6])
 
-        if "rotation" in self.group_attribute :
+        if "rotation" in self.group_attribute:
             self.pos_feature_dim.extend([7, 8, 9, 10])
 
         if "sh" in config.group_attribute:
@@ -493,8 +477,7 @@ class PointTransformer(nn.Module):
             nn.Linear(128, self.trans_dim),
         )
 
-        dpr = [x.item() for x in torch.linspace(
-            0, self.drop_path_rate, self.depth)]
+        dpr = [x.item() for x in torch.linspace(0, self.drop_path_rate, self.depth)]
         self.blocks = TransformerEncoder(
             embed_dim=self.trans_dim,
             depth=self.depth,
@@ -546,10 +529,10 @@ class PointTransformer(nn.Module):
 
             for k in list(base_ckpt.keys()):
                 if k.startswith("MAE_encoder"):
-                    base_ckpt[k[len("MAE_encoder."):]] = base_ckpt[k]
+                    base_ckpt[k[len("MAE_encoder.") :]] = base_ckpt[k]
                     del base_ckpt[k]
                 elif k.startswith("base_model"):
-                    base_ckpt[k[len("base_model."):]] = base_ckpt[k]
+                    base_ckpt[k[len("base_model.") :]] = base_ckpt[k]
                     del base_ckpt[k]
 
             incompatible = self.load_state_dict(base_ckpt, strict=False)
@@ -563,8 +546,7 @@ class PointTransformer(nn.Module):
             if incompatible.unexpected_keys:
                 print_log("unexpected_keys", logger="Transformer")
                 print_log(
-                    get_unexpected_parameters_message(
-                        incompatible.unexpected_keys),
+                    get_unexpected_parameters_message(incompatible.unexpected_keys),
                     logger="Transformer",
                 )
 

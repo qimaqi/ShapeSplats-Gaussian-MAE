@@ -1,22 +1,11 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from timm.models.layers import DropPath, trunc_normal_
-import numpy as np
-from .build import MODELS
+from timm.models.layers import DropPath
 from utils import misc
-from utils.checkpoint import (
-    get_missing_parameters_message,
-    get_unexpected_parameters_message,
-)
 from utils.logger import *
-import random
 from knn_cuda import KNN
-from utils import rotation_conversions
 
 from models.neural_nn import N3AggregationBase
-from time import perf_counter
-from pointnet2_ops import pointnet2_utils
 
 
 class Encoder(nn.Module):  # Embedding module
@@ -25,7 +14,7 @@ class Encoder(nn.Module):  # Embedding module
         self.encoder_channel = encoder_channel
         self.attribute = attribute
         input_dim = 3
-        
+
         if "opacity" in attribute:
             input_dim += 1
         if "sh" in attribute:
@@ -209,20 +198,20 @@ class Group(nn.Module):  # FPS + KNN
         self.knn = KNN(k=self.group_size, transpose_mode=True)
         self.attribute = attribute
         attribute_index = []
-        if 'xyz' in self.attribute:
-            xyz_index = [0,1,2]
+        if "xyz" in self.attribute:
+            xyz_index = [0, 1, 2]
             attribute_index.extend(xyz_index)
-        if 'opacity' in self.attribute:
+        if "opacity" in self.attribute:
             opacity_index = [3]
             attribute_index.extend(opacity_index)
-        if 'scale' in self.attribute:
-            scale_index = [4,5,6]
+        if "scale" in self.attribute:
+            scale_index = [4, 5, 6]
             attribute_index.extend(scale_index)
-        if 'rotation' in self.attribute:
-            rotation_index = [7,8,9,10]
+        if "rotation" in self.attribute:
+            rotation_index = [7, 8, 9, 10]
             attribute_index.extend(rotation_index)
-        if 'sh' in self.attribute:
-            sh_index = [11,12,13]
+        if "sh" in self.attribute:
+            sh_index = [11, 12, 13]
             attribute_index.extend(sh_index)
 
         self.attribute_index = attribute_index
@@ -255,12 +244,12 @@ class Group(nn.Module):  # FPS + KNN
             ).contiguous()
             # normalize
             neighborhood = neighborhood - center.unsqueeze(2)
-        
+
         else:  # gaussian attribute
-            center = misc.fps_gs(xyz, self.num_group, self.attribute) # B G K
-            center_group = center[...,self.attribute_index]
-            xyz_group = xyz[...,self.attribute_index]
-            _, idx = self.knn(xyz_group, center_group) # B G M
+            center = misc.fps_gs(xyz, self.num_group, self.attribute)  # B G K
+            center_group = center[..., self.attribute_index]
+            xyz_group = xyz[..., self.attribute_index]
+            _, idx = self.knn(xyz_group, center_group)  # B G M
 
             assert idx.size(1) == self.num_group
             assert idx.size(2) == self.group_size
@@ -274,7 +263,7 @@ class Group(nn.Module):  # FPS + KNN
             neighborhood = neighborhood.view(
                 batch_size, self.num_group, self.group_size, -1
             ).contiguous()
-            neighborhood[...,:3] = neighborhood[...,:3] - center.unsqueeze(2)[...,:3]
+            neighborhood[..., :3] = neighborhood[..., :3] - center.unsqueeze(2)[..., :3]
 
         return neighborhood, center
 
@@ -414,9 +403,11 @@ class TransformerEncoder(nn.Module):
                     qk_scale=qk_scale,
                     drop=drop_rate,
                     attn_drop=attn_drop_rate,
-                    drop_path=drop_path_rate[i]
-                    if isinstance(drop_path_rate, list)
-                    else drop_path_rate,
+                    drop_path=(
+                        drop_path_rate[i]
+                        if isinstance(drop_path_rate, list)
+                        else drop_path_rate
+                    ),
                 )
                 for i in range(depth)
             ]
@@ -453,9 +444,11 @@ class TransformerDecoder(nn.Module):
                     qk_scale=qk_scale,
                     drop=drop_rate,
                     attn_drop=attn_drop_rate,
-                    drop_path=drop_path_rate[i]
-                    if isinstance(drop_path_rate, list)
-                    else drop_path_rate,
+                    drop_path=(
+                        drop_path_rate[i]
+                        if isinstance(drop_path_rate, list)
+                        else drop_path_rate
+                    ),
                 )
                 for i in range(depth)
             ]

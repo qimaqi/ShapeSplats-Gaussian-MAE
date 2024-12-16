@@ -1,23 +1,17 @@
 import torch
 from plyfile import PlyData, PlyElement
-import os 
-import shutil
-from tqdm import tqdm 
-import numpy as np
-import json 
-import h5py
-import numpy as np
-# import open3d
 import os
-from plyfile import PlyData, PlyElement
-from matplotlib import pyplot as plt
-import torch 
+import numpy as np
+
+# import open3d
 import math
+
 
 def inverse_sigmoid(x):
     return torch.log(x / (1 - x))
 
-def construct_list_of_attributes(_features_dc, _features_rest, _scaling, _rotation ):
+
+def construct_list_of_attributes(_features_dc, _features_rest, _scaling, _rotation):
     l = ["x", "y", "z", "nx", "ny", "nz"]
     # All channels except the 3 DC
     for i in range(_features_dc.shape[1] * _features_dc.shape[2]):
@@ -31,46 +25,91 @@ def construct_list_of_attributes(_features_dc, _features_rest, _scaling, _rotati
         l.append("rot_{}".format(i))
     return l
 
+
 def write_gaussian_feature_to_ply(gaussian_feature, save_path):
     # gaussian Nx59 feature 3+1+3+4+48
     _xyz = gaussian_feature[:, :3]
     _opcaity = gaussian_feature[:, 3:4]
     _opcaity = inverse_sigmoid(_opcaity)
     _scaling = gaussian_feature[:, 4:7]
-    _scaling = torch.log(_scaling) # back to log space
+    _scaling = torch.log(_scaling)  # back to log space
     _rotation = gaussian_feature[:, 7:11]
     _features_dc = gaussian_feature[:, 11:14].reshape(-1, 3, 1)
     _features_rest = torch.zeros(_features_dc.shape[0], 3, 15)
 
-    _features_dc = torch.tensor(_features_dc, dtype=torch.float, device="cpu").transpose(1, 2).contiguous().requires_grad_(False)
+    _features_dc = (
+        torch.tensor(_features_dc, dtype=torch.float, device="cpu")
+        .transpose(1, 2)
+        .contiguous()
+        .requires_grad_(False)
+    )
 
-    _features_rest = torch.tensor(_features_rest, dtype=torch.float, device="cpu").transpose(1, 2).contiguous().requires_grad_(False)
+    _features_rest = (
+        torch.tensor(_features_rest, dtype=torch.float, device="cpu")
+        .transpose(1, 2)
+        .contiguous()
+        .requires_grad_(False)
+    )
 
-    save_ply_tensor(_xyz, _features_dc, _features_rest, _opcaity, _scaling, _rotation, save_path)
+    save_ply_tensor(
+        _xyz, _features_dc, _features_rest, _opcaity, _scaling, _rotation, save_path
+    )
 
-    
-def unnormalize_gaussians(original_gaussians, vis_gaussians, full_rebuild_gaussian, scale_c, scale_m, config):
-    if 'opacity' in config.dataset.train.others.norm_attribute:
-        original_gaussians[...,3] = (1+ (original_gaussians[...,3]))/2
-        vis_gaussians[...,3] = (1+vis_gaussians[...,3])/2
-        full_rebuild_gaussian[...,3] = (1+full_rebuild_gaussian[...,3].clip(-1,1)+1e-9 )/2
 
-    if 'scale' in config.dataset.train.others.norm_attribute:
-        original_gaussians[...,4:7] = original_gaussians[...,4:7] * scale_m.unsqueeze(-1).unsqueeze(-1).to(original_gaussians.device)  + scale_c.unsqueeze(1).repeat(1,original_gaussians.shape[1],1).to(original_gaussians.device)
-        vis_gaussians[...,4:7] = vis_gaussians[...,4:7] * scale_m.unsqueeze(-1).unsqueeze(-1).to(vis_gaussians.device)  + scale_c.unsqueeze(1).repeat(1,vis_gaussians.shape[1],1).to(vis_gaussians.device)
-        full_rebuild_gaussian[...,4:7] = full_rebuild_gaussian[...,4:7].clip(-1,1)  * scale_m.unsqueeze(-1).unsqueeze(-1).to(full_rebuild_gaussian.device)  + scale_c.unsqueeze(1).repeat(1,full_rebuild_gaussian.shape[1],1).to(full_rebuild_gaussian.device)
+def unnormalize_gaussians(
+    original_gaussians, vis_gaussians, full_rebuild_gaussian, scale_c, scale_m, config
+):
+    if "opacity" in config.dataset.train.others.norm_attribute:
+        original_gaussians[..., 3] = (1 + (original_gaussians[..., 3])) / 2
+        vis_gaussians[..., 3] = (1 + vis_gaussians[..., 3]) / 2
+        full_rebuild_gaussian[..., 3] = (
+            1 + full_rebuild_gaussian[..., 3].clip(-1, 1) + 1e-9
+        ) / 2
 
- 
-    if 'sh' in  config.dataset.train.others.norm_attribute:
-        original_gaussians[...,11:14] = original_gaussians[...,11:14] * math.sqrt(3) / (2*0.28209479177387814 )
-        vis_gaussians[...,11:14] = vis_gaussians[...,11:14] * math.sqrt(3) / (2*0.28209479177387814 )
-        full_rebuild_gaussian[...,11:14] = full_rebuild_gaussian[...,11:14] * math.sqrt(3) / (2*0.28209479177387814 )
+    if "scale" in config.dataset.train.others.norm_attribute:
+        original_gaussians[..., 4:7] = original_gaussians[..., 4:7] * scale_m.unsqueeze(
+            -1
+        ).unsqueeze(-1).to(original_gaussians.device) + scale_c.unsqueeze(1).repeat(
+            1, original_gaussians.shape[1], 1
+        ).to(
+            original_gaussians.device
+        )
+        vis_gaussians[..., 4:7] = vis_gaussians[..., 4:7] * scale_m.unsqueeze(
+            -1
+        ).unsqueeze(-1).to(vis_gaussians.device) + scale_c.unsqueeze(1).repeat(
+            1, vis_gaussians.shape[1], 1
+        ).to(
+            vis_gaussians.device
+        )
+        full_rebuild_gaussian[..., 4:7] = full_rebuild_gaussian[..., 4:7].clip(
+            -1, 1
+        ) * scale_m.unsqueeze(-1).unsqueeze(-1).to(
+            full_rebuild_gaussian.device
+        ) + scale_c.unsqueeze(
+            1
+        ).repeat(
+            1, full_rebuild_gaussian.shape[1], 1
+        ).to(
+            full_rebuild_gaussian.device
+        )
+
+    if "sh" in config.dataset.train.others.norm_attribute:
+        original_gaussians[..., 11:14] = (
+            original_gaussians[..., 11:14] * math.sqrt(3) / (2 * 0.28209479177387814)
+        )
+        vis_gaussians[..., 11:14] = (
+            vis_gaussians[..., 11:14] * math.sqrt(3) / (2 * 0.28209479177387814)
+        )
+        full_rebuild_gaussian[..., 11:14] = (
+            full_rebuild_gaussian[..., 11:14] * math.sqrt(3) / (2 * 0.28209479177387814)
+        )
 
     return original_gaussians, vis_gaussians, full_rebuild_gaussian
 
-    
 
-def save_ply_tensor(_xyz, _features_dc, _features_rest, _opacity, _scaling ,_rotation , path):
+def save_ply_tensor(
+    _xyz, _features_dc, _features_rest, _opacity, _scaling, _rotation, path
+):
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     xyz = _xyz.detach().cpu().numpy()
@@ -95,10 +134,10 @@ def save_ply_tensor(_xyz, _features_dc, _features_rest, _opacity, _scaling ,_rot
     scale = _scaling.detach().cpu().numpy()
     rotation = _rotation.detach().cpu().numpy()
 
-    attributes = construct_list_of_attributes(_features_dc, _features_rest, _scaling, _rotation)
-    dtype_full = [
-        (attribute, "f4") for attribute in attributes
-    ]
+    attributes = construct_list_of_attributes(
+        _features_dc, _features_rest, _scaling, _rotation
+    )
+    dtype_full = [(attribute, "f4") for attribute in attributes]
     elements = np.empty(xyz.shape[0], dtype=dtype_full)
     attributes = np.concatenate(
         (xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1
@@ -106,7 +145,6 @@ def save_ply_tensor(_xyz, _features_dc, _features_rest, _opacity, _scaling ,_rot
     elements[:] = list(map(tuple, attributes))
     el = PlyElement.describe(elements, "vertex")
     PlyData([el]).write(path)
-
 
 
 C0 = 0.28209479177387814

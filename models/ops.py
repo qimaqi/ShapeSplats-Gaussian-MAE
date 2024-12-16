@@ -1,10 +1,9 @@
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+
 
 def euclidean_distance(x, y):
-    out = -2*torch.matmul(x, y)
+    out = -2 * torch.matmul(x, y)
     out += (x**2).sum(dim=-1, keepdim=True)
     out += (y**2).sum(dim=-2, keepdim=True)
     return out

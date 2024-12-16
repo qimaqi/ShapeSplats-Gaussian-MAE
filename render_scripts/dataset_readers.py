@@ -29,7 +29,7 @@ from pathlib import Path
 from plyfile import PlyData, PlyElement
 from utils.sh_utils import SH2RGB
 from scene.gaussian_model import BasicPointCloud
-import trimesh 
+import trimesh
 import zipfile
 from io import BytesIO
 
@@ -130,11 +130,12 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
     sys.stdout.write("\n")
     return cam_infos
 
+
 def fetchObj(path):
     print("##### loading pointcloud from mesh object ######")
 
     mesh = trimesh.load(path)
-    num_points = 5000 # number of points to sample, change accordingly
+    num_points = 5000  # number of points to sample, change accordingly
     points, face_index = trimesh.sample.sample_surface(mesh, num_points)
     face_normals = mesh.face_normals
     # Retrieve the normals for the sampled points based on face index
@@ -174,7 +175,7 @@ def fetchObj(path):
     colors = sampled_colors
     normals = sampled_normals
     positions = np.array(positions)
-    colors = np.array(colors) / 255.
+    colors = np.array(colors) / 255.0
     normals = np.array(normals)
 
     # for out of view cases we need to ignore some
@@ -191,7 +192,6 @@ def fetchPly(path):
     colors = np.vstack([vertices["red"], vertices["green"], vertices["blue"]]).T / 255.0
     normals = np.vstack([vertices["nx"], vertices["ny"], vertices["nz"]]).T
     return BasicPointCloud(points=positions, colors=colors, normals=normals)
-
 
 
 def storePly(path, xyz, rgb):
@@ -286,12 +286,12 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
         frames = contents["frames"]
         # read from zip files
         zip_path = os.path.join(path, "image.zip")
-        
+
         if os.path.exists(zip_path):
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
                 # zip_contents = zip_ref.namelist()
                 # print("zip_contents", zip_contents)
- 
+
                 for idx, frame in enumerate(frames):
                     cam_name = os.path.join(path, frame["file_path"] + extension)
 
@@ -310,16 +310,17 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
                     image_path = os.path.join(path, cam_name)
                     image_name = Path(cam_name).stem
 
-                    # zip directly 
+                    # zip directly
                     image_data = zip_ref.read(image_name + extension)
                     image_file = BytesIO(image_data)
-                    
 
                     image = Image.open(image_file)
 
                     im_data = np.array(image.convert("RGBA"))
 
-                    bg = np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
+                    bg = (
+                        np.array([1, 1, 1]) if white_background else np.array([0, 0, 0])
+                    )
 
                     norm_data = im_data / 255.0
                     arr = norm_data[:, :, :3] * norm_data[:, :, 3:4] + bg * (
@@ -365,8 +366,6 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
                 image_path = os.path.join(path, cam_name)
                 image_name = Path(cam_name).stem
 
-
-
                 image = Image.open(image_path)
 
                 im_data = np.array(image.convert("RGBA"))
@@ -405,7 +404,10 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
     print("Reading Training Transforms")
     if not os.path.exists(os.path.join(path, "transforms_train.json")):
         # rename the transforms.json to transforms_train.json
-        os.rename(os.path.join(path, "transforms.json"), os.path.join(path, "transforms_train.json"))
+        os.rename(
+            os.path.join(path, "transforms.json"),
+            os.path.join(path, "transforms_train.json"),
+        )
 
     train_cam_infos = readCamerasFromTransforms(
         path, "transforms_train.json", white_background, extension
@@ -437,7 +439,6 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
         storePly(ply_path, xyz, SH2RGB(shs) * 255)
     else:
         pcd = fetchObj(mesh_path)
-
 
     scene_info = SceneInfo(
         point_cloud=pcd,

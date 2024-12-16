@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 
-import copy
-import logging
-import os
 from collections import defaultdict
-import torch
 import torch.nn as nn
 
 from typing import Any
-from typing import Optional, List, Dict, NamedTuple, Tuple, Iterable
+from typing import List, Dict, Tuple, Iterable
 
 from termcolor import colored
+
 
 def get_missing_parameters_message(keys: List[str]) -> str:
     """
@@ -59,7 +56,7 @@ def _strip_prefix_if_present(state_dict: Dict[str, Any], prefix: str) -> None:
         return
 
     for key in keys:
-        newkey = key[len(prefix):]
+        newkey = key[len(prefix) :]
         state_dict[newkey] = state_dict.pop(key)
 
     # also strip the prefix in metadata, if any..
@@ -76,7 +73,7 @@ def _strip_prefix_if_present(state_dict: Dict[str, Any], prefix: str) -> None:
 
             if len(key) == 0:
                 continue
-            newkey = key[len(prefix):]
+            newkey = key[len(prefix) :]
             metadata[newkey] = metadata.pop(key)
 
 
@@ -94,7 +91,7 @@ def _group_checkpoint_keys(keys: List[str]) -> Dict[str, List[str]]:
     for key in keys:
         pos = key.rfind(".")
         if pos >= 0:
-            head, tail = key[:pos], [key[pos + 1:]]
+            head, tail = key[:pos], [key[pos + 1 :]]
         else:
             head, tail = key, []
         groups[head].extend(tail)
@@ -119,7 +116,7 @@ def _group_to_str(group: List[str]) -> str:
 
 
 def _named_modules_with_dup(
-        model: nn.Module, prefix: str = ""
+    model: nn.Module, prefix: str = ""
 ) -> Iterable[Tuple[str, nn.Module]]:
     """
     The same as `model.named_modules()`, except that it includes
