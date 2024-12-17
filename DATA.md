@@ -97,7 +97,7 @@ This section provides instructions on downloading and preparing the following da
 1. **Download the Dataset**     
    You can officially download the Shape-Part annotations from the following [link](https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0_normal.zip).  If the official link is unavailable, you can also download the dataset from our [Hugging Face repository](https://huggingface.co/datasets/ShapeSplats/sharing/tree/main).  
 
-   After unzipping shapenetcore_partanno_segmentation_benchmark_v0_normal.zip, you need to update the following environment variables:
+   After unzipping shapenetcore_partanno_segmentation_benchmark_v0_normal.zip, you need to update the following environment variables, more details please forward to [segmentation_gs](./segmentation_gs):
 
    - `PARTANNO_ROOT`
    - `GS_ROOT` (Note: This should be the same as the GS_PATH used for ShapeSplat)

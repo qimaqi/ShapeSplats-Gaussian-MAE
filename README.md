@@ -120,7 +120,7 @@ conda env create -f env.yaml
 
 ## Dataset Preparation
 
-Please refer to the instructions in the `DATA.md` on data preparation. The instructions cover:  
+Please refer to the instructions in the [DATA.md](./DATA.md) on data preparation. The instructions cover:  
 - Prepare the pretraining dataset.  
 - Set up finetuning datasets for classification and segmentation tasks.  
 - Update the data config and some environement parameters
