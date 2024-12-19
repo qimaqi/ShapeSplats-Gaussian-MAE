@@ -241,4 +241,4 @@ If you find our work helpful, please consider citing the following papers and/or
 </div>
 
 ## Acknowledgements
-We sincerely thank the ShapeNet and ModelNet teams for their efforts in creating and open-sourcing the datasets.  
+We sincerely thank the ShapeNet and ModelNet teams for their efforts in creating and open-sourcing the datasets. We express our gratitude to the team of PointMAE for providing the public codebase, which served as the foundation for our further development.
