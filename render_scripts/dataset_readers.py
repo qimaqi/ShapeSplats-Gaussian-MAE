@@ -299,6 +299,8 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
                     c2w = np.array(frame["transform_matrix"])
                     # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
                     c2w[:3, 1:3] *= -1
+                    c2w_copy = c2w.copy()
+                    c2w[[1, 2]] = c2w_copy[[2, 1]]
 
                     # get the world-to-camera transform and set R, T
                     w2c = np.linalg.inv(c2w)
@@ -355,6 +357,8 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
                 c2w = np.array(frame["transform_matrix"])
                 # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
                 c2w[:3, 1:3] *= -1
+                c2w_copy = c2w.copy()
+                c2w[[1, 2]] = c2w_copy[[2, 1]]
 
                 # get the world-to-camera transform and set R, T
                 w2c = np.linalg.inv(c2w)
