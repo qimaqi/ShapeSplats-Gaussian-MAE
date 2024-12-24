@@ -27,7 +27,8 @@ $^\star$: Equal Contribution, $^\dagger$: Corresponding Author <br>
 - [x] `05.09.2024`: Our ShapeSplat [dataset](https://huggingface.co/datasets/ShapeNet/ShapeSplatsV1) part is released under the official ShapeNet repository! We thank the support from the ShapeNet team!
 - [x] `05.09.2024`: Dataset rendering code release in [render_scripts](./render_scripts)
 - [x] `08.09.2024`: The ModelNet-Splats is released on [Huggingface](https://huggingface.co/datasets/ShapeSplats/ModelNet_Splats). Please follow the ModelNet [term of use](https://modelnet.cs.princeton.edu/#).
-- [x] `16.12.2024`: Code release
+- [x] `16.12.2024`: Code release.
+- [x] `24.12.2024`: ShapeSplat is accepted as 3DV oral! 🎄 Meet you in Singapore!
 
 
 ## Method
